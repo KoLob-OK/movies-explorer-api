@@ -1,5 +1,9 @@
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
+const helmet = require('helmet');
+const cors = require('cors');
 const { errors } = require('celebrate');
 
 const usersRouter = require('./routes/users');
@@ -7,6 +11,7 @@ const moviesRouter = require('./routes/movies');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const { ErrorHandler, handleError } = require('./errors/handleError');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 const { signInValidation, signUpValidation } = require('./middlewares/validations');
 
 const { PORT = 3000 } = process.env;
@@ -14,6 +19,9 @@ const { PORT = 3000 } = process.env;
 const app = express();
 
 app.use(express.json());
+app.use(cors());
+app.use(requestLogger); // подключаем логгер запросов
+app.use(helmet());
 
 mongoose
   .connect('mongodb://localhost:27017/bitfilmsdb', {
@@ -47,6 +55,7 @@ app.use('*', (req, res, next) => {
   next(new ErrorHandler(404, 'Ошибка 404. Введен некорректный адрес'));
 });
 
+app.use(errorLogger); // подключаем логгер ошибок
 app.use(errors());
 app.use(handleError);
 
