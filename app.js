@@ -7,14 +7,10 @@ const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const { errors } = require('celebrate');
 
-const usersRouter = require('./routes/users');
-const moviesRouter = require('./routes/movies');
 const { limiterConfig } = require('./utils/constants');
-const { login, createUser } = require('./controllers/users');
-const auth = require('./middlewares/auth');
-const { ErrorHandler, handleError } = require('./errors/handleError');
+const { handleError } = require('./errors/handleError');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
-const { signInValidation, signUpValidation } = require('./middlewares/validations');
+const router = require('./routes');
 
 const { PORT = 3000 } = process.env;
 
@@ -31,6 +27,7 @@ app.use(helmet());
 mongoose
   .connect('mongodb://localhost:27017/bitfilmsdb', {
     useNewUrlParser: true,
+    useUnifiedTopology: true,
   })
   .then(() => {
     console.log('Connected to MongoDB!');
@@ -39,26 +36,7 @@ mongoose
     console.log('Database connection error');
   });
 
-// Краш-тест сервера (запрос вызывает падение сервера для проверки его авт. восстановления)
-app.get('/crash-test', () => {
-  setTimeout(() => {
-    throw new Error('Сервер сейчас упадёт');
-  }, 0);
-});
-
-// роуты, не требующие авторизации (регистрация и логин)
-app.post('/signin', signInValidation, login);
-app.post('/signup', signUpValidation, createUser);
-
-// роуты, которым авторизация нужна
-app.use(auth);
-app.use('/users', usersRouter);
-app.use('/movies', moviesRouter);
-
-// запрос к ошибочному роуту
-app.use((req, res, next) => {
-  next(new ErrorHandler(404, 'Ошибка 404. Введен некорректный адрес'));
-});
+app.use(router);
 
 app.use(errorLogger); // подключаем логгер ошибок
 app.use(errors());

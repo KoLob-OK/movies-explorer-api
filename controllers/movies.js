@@ -13,7 +13,7 @@ const getMovies = async (req, res, next) => {
   try {
     const movies = await Movie.find({}).populate('owner');
     res.status(statusCode.ok).send(movies.reverse());
-    console.log('Фильмы загружены');
+    console.log('successful getting of the movies');
   } catch (err) {
     next(err);
   }
@@ -52,8 +52,8 @@ const createMovie = async (req, res, next) => {
       owner: ownerId,
     });
     await movie.populate('owner');
-    console.log(movie);
-    res.status(statusCode.created).send(movie);
+    res.status(statusCode.created).send({ movie, message: 'Фильм успешно добавлен' });
+    console.log('successful movie creation');
   } catch (err) {
     if (err.name === 'CastError' || err.name === 'ValidationError') {
       next(new ErrorHandler(400, 'Ошибка 400. Переданы некорректные данные при создании фильма'));
@@ -78,7 +78,8 @@ const deleteMovie = async (req, res, next) => {
       return;
     }
     await Movie.findByIdAndRemove(movieId);
-    res.status(statusCode.ok).send(movie);
+    res.status(statusCode.ok).send({ movie, message: 'Фильм успешно удален' });
+    console.log('successful movie deletion');
   } catch (err) {
     if (err.name === 'CastError' || err.name === 'ValidationError') {
       next(new ErrorHandler(400, 'Ошибка 400. Переданы некорректные данные при удалении фильма'));

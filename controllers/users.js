@@ -30,6 +30,7 @@ const createUser = async (req, res, next) => {
       email: user.email,
       name: user.name,
     });
+    console.log('successful user creation');
     // next();
   } catch (err) {
     if (err.code === 11000) {
@@ -58,13 +59,13 @@ const login = async (req, res, next) => {
 
     // вернём токен, браузер сохранит его в куках
     res
-      // КУКИ ПРОВАЛИВАЮТ ТЕСТЫ НА ГИТХАБЕ!!!
+    // КУКИ ПРОВАЛИВАЮТ ТЕСТЫ НА ГИТХАБЕ!!!
       /* .cookie('jwt', token, {
           maxAge: 3600000 * 24 * 7,
           httpOnly: true,
         }) */
       .send({ token, message: 'Успешный вход' });
-    console.log(token);
+    console.log('successful login');
   } catch (err) {
     next(err);
   }
@@ -81,7 +82,7 @@ const getCurrentUser = async (req, res, next) => {
       next(new ErrorHandler(404, 'Ошибка 404. Пользователь не найден'));
     }
     res.status(statusCode.ok).send(user);
-    console.log('Текущий пользователь загружен');
+    console.log('successful getting of the current user');
   } catch (err) {
     next(err);
   }
@@ -105,6 +106,7 @@ const updateUser = async (req, res, next) => {
       next(new ErrorHandler(404, 'Ошибка 404. Пользователь не найден'));
     }
     res.status(statusCode.ok).send(user);
+    console.log('successful update of the current user');
   } catch (err) {
     if (err.name === 'CastError' || err.name === 'ValidationError') {
       next(new ErrorHandler(400, 'Ошибка 400. Неверные данные'));
