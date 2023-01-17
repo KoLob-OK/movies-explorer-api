@@ -3,11 +3,13 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const { errors } = require('celebrate');
 
 const usersRouter = require('./routes/users');
 const moviesRouter = require('./routes/movies');
+const { limiterConfig } = require('./utils/constants');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const { ErrorHandler, handleError } = require('./errors/handleError');
@@ -18,9 +20,12 @@ const { PORT = 3000 } = process.env;
 
 const app = express();
 
+const limiter = rateLimit(limiterConfig);
+
 app.use(express.json());
 app.use(cors());
 app.use(requestLogger); // подключаем логгер запросов
+app.use(limiter);
 app.use(helmet());
 
 mongoose
@@ -51,7 +56,7 @@ app.use('/users', usersRouter);
 app.use('/movies', moviesRouter);
 
 // запрос к ошибочному роуту
-app.use('*', (req, res, next) => {
+app.use((req, res, next) => {
   next(new ErrorHandler(404, 'Ошибка 404. Введен некорректный адрес'));
 });
 
