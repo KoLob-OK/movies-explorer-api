@@ -1,12 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { celebrate, errors, Joi } = require('celebrate');
+const { errors } = require('celebrate');
 
 const usersRouter = require('./routes/users');
 const moviesRouter = require('./routes/movies');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const { ErrorHandler, handleError } = require('./errors/handleError');
+const { signInValidation, signUpValidation } = require('./middlewares/validations');
 
 const { PORT = 3000 } = process.env;
 
@@ -33,21 +34,8 @@ app.get('/crash-test', () => {
 });
 
 // роуты, не требующие авторизации (регистрация и логин)
-app.post('/signin', celebrate({
-  // валидируем тело запроса
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required(),
-  }),
-}), login);
-app.post('/signup', celebrate({
-  // валидируем тело запроса
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required(),
-    name: Joi.string().min(2).max(30),
-  }),
-}), createUser);
+app.post('/signin', signInValidation, login);
+app.post('/signup', signUpValidation, createUser);
 
 // роуты, которым авторизация нужна
 app.use(auth);
