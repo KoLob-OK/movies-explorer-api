@@ -7,12 +7,9 @@ const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const { errors } = require('celebrate');
 
-const {
-  limiterConfig,
-  PORT,
-  NODE_ENV,
-  MONGO_URL,
-} = require('./utils/constants');
+const { PORT, NODE_ENV, MONGO_URL } = require('./utils/constants');
+const { MONGO_URL_DEV } = require('./utils/devConfig');
+const { limiterConfig } = require('./utils/rateLimiterConfig');
 const { handleError } = require('./errors/handleError');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const router = require('./routes');
@@ -28,7 +25,7 @@ app.use(limiter);
 app.use(helmet());
 
 mongoose
-  .connect(NODE_ENV === 'production' ? MONGO_URL : 'mongodb://localhost:27017/movexpdb', {
+  .connect(NODE_ENV === 'production' ? MONGO_URL : MONGO_URL_DEV, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })

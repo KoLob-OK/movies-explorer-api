@@ -5,6 +5,7 @@ const User = require('../models/user');
 const { ErrorHandler } = require('../errors/handleError');
 
 const { NODE_ENV, JWT_SECRET } = require('../utils/constants');
+const { JWT_SECRET_DEV } = require('../utils/devConfig');
 
 console.log(process.env.NODE_ENV);
 
@@ -54,7 +55,7 @@ const login = async (req, res, next) => {
     // если найден, создаем токен
     const token = jwt.sign(
       { _id: user._id },
-      NODE_ENV === 'production' ? JWT_SECRET : 'secret-key',
+      NODE_ENV === 'production' ? JWT_SECRET : JWT_SECRET_DEV,
       { expiresIn: '7d' },
     );
 
