@@ -7,4 +7,18 @@ const limiterConfig = {
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 };
 
-module.exports = { regexUrl, limiterConfig };
+const {
+  PORT = 3000,
+  NODE_ENV,
+  JWT_SECRET,
+  MONGO_URL,
+} = process.env;
+
+module.exports = {
+  regexUrl,
+  limiterConfig,
+  PORT,
+  NODE_ENV,
+  JWT_SECRET,
+  MONGO_URL,
+};

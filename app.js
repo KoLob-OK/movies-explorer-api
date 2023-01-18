@@ -7,12 +7,15 @@ const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const { errors } = require('celebrate');
 
-const { limiterConfig } = require('./utils/constants');
+const {
+  limiterConfig,
+  PORT,
+  NODE_ENV,
+  MONGO_URL,
+} = require('./utils/constants');
 const { handleError } = require('./errors/handleError');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const router = require('./routes');
-
-const { PORT = 3000 } = process.env;
 
 const app = express();
 
@@ -25,7 +28,7 @@ app.use(limiter);
 app.use(helmet());
 
 mongoose
-  .connect('mongodb://localhost:27017/bitfilmsdb', {
+  .connect(NODE_ENV === 'production' ? MONGO_URL : 'mongodb://localhost:27017/movexpdb', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })

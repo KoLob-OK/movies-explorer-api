@@ -4,7 +4,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { ErrorHandler } = require('../errors/handleError');
 
-const { NODE_ENV, JWT_SECRET } = process.env;
+const { NODE_ENV, JWT_SECRET } = require('../utils/constants');
+
 console.log(process.env.NODE_ENV);
 
 const statusCode = {
@@ -30,7 +31,7 @@ const createUser = async (req, res, next) => {
       email: user.email,
       name: user.name,
     });
-    console.log('successful user creation');
+    console.log('-successful user creation-');
     // next();
   } catch (err) {
     if (err.code === 11000) {
@@ -65,7 +66,7 @@ const login = async (req, res, next) => {
           httpOnly: true,
         }) */
       .send({ token, message: 'Успешный вход' });
-    console.log('successful login');
+    console.log('-successful login-');
   } catch (err) {
     next(err);
   }
@@ -82,7 +83,7 @@ const getCurrentUser = async (req, res, next) => {
       next(new ErrorHandler(404, 'Ошибка 404. Пользователь не найден'));
     }
     res.status(statusCode.ok).send(user);
-    console.log('successful getting of the current user');
+    console.log('-successful getting of the current user-');
   } catch (err) {
     next(err);
   }
@@ -106,7 +107,7 @@ const updateUser = async (req, res, next) => {
       next(new ErrorHandler(404, 'Ошибка 404. Пользователь не найден'));
     }
     res.status(statusCode.ok).send(user);
-    console.log('successful update of the current user');
+    console.log('-successful update of the current user-');
   } catch (err) {
     if (err.name === 'CastError' || err.name === 'ValidationError') {
       next(new ErrorHandler(400, 'Ошибка 400. Неверные данные'));
