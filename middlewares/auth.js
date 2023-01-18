@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const { ErrorHandler } = require('../errors/handleError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
+const { JWT_SECRET_DEV } = require('../utils/devConfig');
+const { STATUS_CODES, ERROR_MESSAGES } = require('../utils/constants');
 
 module.exports = (req, res, next) => {
   console.log('authorization');
@@ -10,7 +12,8 @@ module.exports = (req, res, next) => {
   console.log({ authorization });
   // убеждаемся, что он есть или начинается с Bearer
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    next(new ErrorHandler(401, 'Ошибка 401. Необходима авторизация'));
+    next(new ErrorHandler(STATUS_CODES.UNAUTHORIZED, ERROR_MESSAGES.UNAUTHORIZED_AUTH));
+    return;
   }
 
   // если токен на месте, то извлечём его
@@ -19,10 +22,12 @@ module.exports = (req, res, next) => {
 
   try {
     // попытаемся верифицировать токен
-    payload = jwt.verify(token, NODE_ENV === 'production' ? JWT_SECRET : 'secret-key');
+    payload = jwt.verify(token, NODE_ENV === 'production'
+      ? JWT_SECRET : JWT_SECRET_DEV);
   } catch (err) {
     // отправим ошибку, если не получилось
-    next(new ErrorHandler(401, 'Ошибка 401. Необходима авторизация'));
+    next(new ErrorHandler(STATUS_CODES.UNAUTHORIZED, ERROR_MESSAGES.UNAUTHORIZED_AUTH));
+    return;
   }
 
   req.user = payload; // записываем пейлоуд в объект запроса

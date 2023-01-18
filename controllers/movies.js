@@ -1,19 +1,17 @@
 const Movie = require('../models/movie');
 
 const { ErrorHandler } = require('../errors/handleError');
-
-const statusCode = {
-  ok: 200,
-  created: 201,
-};
+const { STATUS_CODES, ERROR_MESSAGES } = require('../utils/constants');
 
 // GET /movies - получение всех сохранённых текущим пользователем фильмов
 const getMovies = async (req, res, next) => {
   console.log('getMovies');
+  const owner = req.user._id;
   try {
-    const movies = await Movie.find({}).populate('owner');
-    res.status(statusCode.ok).send(movies.reverse());
+    const movies = await Movie.find({ owner }).populate('owner');
+    res.status(STATUS_CODES.OK).send(movies.reverse());
     console.log('-successful getting of the movies-');
+    return;
   } catch (err) {
     next(err);
   }
@@ -22,41 +20,21 @@ const getMovies = async (req, res, next) => {
 // POST /movies - сохранение фильма
 const createMovie = async (req, res, next) => {
   console.log('createMovie');
-  const {
-    country,
-    director,
-    duration,
-    year,
-    description,
-    image,
-    trailerLink,
-    nameRU,
-    nameEN,
-    thumbnail,
-    movieId,
-  } = req.body;
   try {
     const ownerId = req.user._id;
-    const movie = await Movie.create({
-      country,
-      director,
-      duration,
-      year,
-      description,
-      image,
-      trailerLink,
-      nameRU,
-      nameEN,
-      thumbnail,
-      movieId,
-      owner: ownerId,
-    });
+    const movie = await Movie.create({ ...req.body, owner: ownerId });
     await movie.populate('owner');
-    res.status(statusCode.created).send({ movie, message: 'Фильм успешно добавлен' });
+    res.status(STATUS_CODES.CREATED).send({ movie, message: 'Фильм успешно добавлен' });
     console.log('-successful movie creation-');
+    return;
   } catch (err) {
-    if (err.name === 'CastError' || err.name === 'ValidationError') {
-      next(new ErrorHandler(400, 'Ошибка 400. Переданы некорректные данные при создании фильма'));
+    if (err.name === 'ValidationError') {
+      next(new ErrorHandler(STATUS_CODES.BAD_REQUEST, ERROR_MESSAGES.BAD_REQUEST_MOVIE_CREATE));
+      return;
+    }
+    if (err.name === 11000) {
+      next(new ErrorHandler(STATUS_CODES.CONFLICT, ERROR_MESSAGES.CONFLICT_MOVIE));
+      return;
     }
     next(err);
   }
@@ -70,19 +48,21 @@ const deleteMovie = async (req, res, next) => {
     const userId = req.user._id;
     const movie = await Movie
       .findById(movieId)
-      .orFail(new ErrorHandler(404, 'Ошибка 404. Фильм не найден'))
+      .orFail(new ErrorHandler(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND_MOVIE))
       .populate('owner');
     const ownerId = movie.owner._id.toString();
     if (ownerId !== userId) {
-      next(new ErrorHandler(403, 'Ошибка 403. Удаление чужого фильма запрещено'));
+      next(new ErrorHandler(STATUS_CODES.FORBIDDEN, ERROR_MESSAGES.FORBIDDEN));
       return;
     }
     await Movie.findByIdAndRemove(movieId);
-    res.status(statusCode.ok).send({ movie, message: 'Фильм успешно удален' });
+    res.status(STATUS_CODES.OK).send({ movie, message: 'Фильм успешно удален' });
     console.log('-successful movie deletion-');
+    return;
   } catch (err) {
-    if (err.name === 'CastError' || err.name === 'ValidationError') {
-      next(new ErrorHandler(400, 'Ошибка 400. Переданы некорректные данные при удалении фильма'));
+    if (err.name === 'CastError') {
+      next(new ErrorHandler(STATUS_CODES.BAD_REQUEST, ERROR_MESSAGES.BAD_REQUEST_MOVIE_DELETE));
+      return;
     }
     next(err);
   }

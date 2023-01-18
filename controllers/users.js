@@ -4,15 +4,13 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { ErrorHandler } = require('../errors/handleError');
 
-const { NODE_ENV, JWT_SECRET } = require('../utils/constants');
+const {
+  NODE_ENV, JWT_SECRET, STATUS_CODES, ERROR_MESSAGES,
+} = require('../utils/constants');
+
 const { JWT_SECRET_DEV } = require('../utils/devConfig');
 
 console.log(process.env.NODE_ENV);
-
-const statusCode = {
-  ok: 200,
-  created: 201,
-};
 
 // POST /signup - создание пользователя (email*, password*)
 const createUser = async (req, res, next) => {
@@ -27,7 +25,7 @@ const createUser = async (req, res, next) => {
       password: passHash,
       name,
     });
-    res.status(statusCode.created).send({
+    res.status(STATUS_CODES.CREATED).send({
       _id: user._id,
       email: user.email,
       name: user.name,
@@ -36,10 +34,12 @@ const createUser = async (req, res, next) => {
     // next();
   } catch (err) {
     if (err.code === 11000) {
-      next(new ErrorHandler(409, `Ошибка 409. Пользователь ${req.body.email} уже существует`));
+      next(new ErrorHandler(STATUS_CODES.CONFLICT, ERROR_MESSAGES.CONFLICT_USER));
+      return;
     }
-    if (err.name === 'CastError' || err.name === 'ValidationError') {
-      next(new ErrorHandler(400, 'Ошибка 400. Неверные данные'));
+    if (err.name === 'ValidationError') {
+      next(new ErrorHandler(STATUS_CODES.BAD_REQUEST, ERROR_MESSAGES.BAD_REQUEST_USER));
+      return;
     }
     next(err);
   }
@@ -68,6 +68,7 @@ const login = async (req, res, next) => {
         }) */
       .send({ token, message: 'Успешный вход' });
     console.log('-successful login-');
+    return;
   } catch (err) {
     next(err);
   }
@@ -81,10 +82,12 @@ const getCurrentUser = async (req, res, next) => {
   try {
     const user = await User.findById(_id);
     if (!user) {
-      next(new ErrorHandler(404, 'Ошибка 404. Пользователь не найден'));
+      next(new ErrorHandler(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND_USER));
+      return;
     }
-    res.status(statusCode.ok).send(user);
+    res.status(STATUS_CODES.OK).send(user);
     console.log('-successful getting of the current user-');
+    return;
   } catch (err) {
     next(err);
   }
@@ -105,13 +108,20 @@ const updateUser = async (req, res, next) => {
       },
     );
     if (!user) {
-      next(new ErrorHandler(404, 'Ошибка 404. Пользователь не найден'));
+      next(new ErrorHandler(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND_USER));
+      return;
     }
-    res.status(statusCode.ok).send(user);
+    res.status(STATUS_CODES.OK).send(user);
     console.log('-successful update of the current user-');
+    return;
   } catch (err) {
     if (err.name === 'CastError' || err.name === 'ValidationError') {
-      next(new ErrorHandler(400, 'Ошибка 400. Неверные данные'));
+      next(new ErrorHandler(STATUS_CODES.BAD_REQUEST, ERROR_MESSAGES.BAD_REQUEST_USER));
+      return;
+    }
+    if (err.code === 11000) {
+      next(new ErrorHandler(STATUS_CODES.CONFLICT, ERROR_MESSAGES.CONFLICT_USER));
+      return;
     }
     next(err);
   }

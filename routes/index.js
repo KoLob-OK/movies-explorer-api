@@ -3,6 +3,7 @@ const { signInValidation, signUpValidation } = require('../middlewares/validatio
 const { login, createUser } = require('../controllers/users');
 const auth = require('../middlewares/auth');
 const { ErrorHandler } = require('../errors/handleError');
+const { STATUS_CODES, ERROR_MESSAGES } = require('../utils/constants');
 
 const usersRouter = require('./users');
 const moviesRouter = require('./movies');
@@ -25,7 +26,7 @@ router.use('/movies', moviesRouter);
 
 // запрос к ошибочному роуту
 router.use((req, res, next) => {
-  next(new ErrorHandler(404, 'Ошибка 404. Введен некорректный адрес'));
+  next(new ErrorHandler(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND_PAGE));
 });
 
 module.exports = router;

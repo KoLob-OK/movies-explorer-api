@@ -1,3 +1,5 @@
+const { STATUS_CODES, ERROR_MESSAGES } = require('../utils/constants');
+
 class ErrorHandler extends Error {
   constructor(statusCode, message) {
     super();
@@ -7,13 +9,15 @@ class ErrorHandler extends Error {
 }
 
 const handleError = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const message = statusCode === 500 ? 'Ошибка 500. На сервере произошла ошибка' : err.message;
-  res.status(statusCode).json({
-    status: 'error',
-    statusCode,
-    message,
-  });
+  const statusCode = err.statusCode || STATUS_CODES.INTERNAL_SERVER_ERROR;
+  const message = statusCode === STATUS_CODES.INTERNAL_SERVER_ERROR
+    ? ERROR_MESSAGES.INTERNAL_SERVER_ERROR : err.message;
+  res.status(statusCode)
+    .json({
+      status: 'error',
+      statusCode,
+      message,
+    });
   next();
 };
 
