@@ -1,9 +1,10 @@
 const jwt = require('jsonwebtoken');
-const { ErrorHandler } = require('../errors/handleError');
+
+const { UnauthorizedError } = require('../errors/UnauthorizedError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 const { JWT_SECRET_DEV } = require('../utils/devConfig');
-const { STATUS_CODES, ERROR_MESSAGES } = require('../utils/constants');
+const { ERROR_MESSAGES } = require('../utils/constants');
 
 module.exports = (req, res, next) => {
   console.log('authorization');
@@ -12,7 +13,7 @@ module.exports = (req, res, next) => {
   console.log({ authorization });
   // убеждаемся, что он есть или начинается с Bearer
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    next(new ErrorHandler(STATUS_CODES.UNAUTHORIZED, ERROR_MESSAGES.UNAUTHORIZED_AUTH));
+    next(new UnauthorizedError(ERROR_MESSAGES.UNAUTHORIZED_AUTH));
     return;
   }
 
@@ -26,7 +27,7 @@ module.exports = (req, res, next) => {
       ? JWT_SECRET : JWT_SECRET_DEV);
   } catch (err) {
     // отправим ошибку, если не получилось
-    next(new ErrorHandler(STATUS_CODES.UNAUTHORIZED, ERROR_MESSAGES.UNAUTHORIZED_AUTH));
+    next(new UnauthorizedError(ERROR_MESSAGES.UNAUTHORIZED_AUTH));
     return;
   }
 

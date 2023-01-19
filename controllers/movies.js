@@ -1,6 +1,10 @@
 const Movie = require('../models/movie');
 
-const { ErrorHandler } = require('../errors/handleError');
+const { BadRequestError } = require('../errors/BadRequestError');
+const { NotFoundError } = require('../errors/NotFoundError');
+const { ForbiddenError } = require('../errors/ForbiddenError');
+const { ConflictError } = require('../errors/ConflictError');
+
 const { STATUS_CODES, ERROR_MESSAGES } = require('../utils/constants');
 
 // GET /movies - получение всех сохранённых текущим пользователем фильмов
@@ -29,11 +33,11 @@ const createMovie = async (req, res, next) => {
     return;
   } catch (err) {
     if (err.name === 'ValidationError') {
-      next(new ErrorHandler(STATUS_CODES.BAD_REQUEST, ERROR_MESSAGES.BAD_REQUEST_MOVIE_CREATE));
+      next(new BadRequestError(ERROR_MESSAGES.BAD_REQUEST_MOVIE_CREATE));
       return;
     }
     if (err.name === 11000) {
-      next(new ErrorHandler(STATUS_CODES.CONFLICT, ERROR_MESSAGES.CONFLICT_MOVIE));
+      next(new ConflictError(ERROR_MESSAGES.CONFLICT_MOVIE));
       return;
     }
     next(err);
@@ -48,11 +52,11 @@ const deleteMovie = async (req, res, next) => {
     const userId = req.user._id;
     const movie = await Movie
       .findById(movieId)
-      .orFail(new ErrorHandler(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND_MOVIE))
+      .orFail(new NotFoundError(ERROR_MESSAGES.NOT_FOUND_MOVIE))
       .populate('owner');
     const ownerId = movie.owner._id.toString();
     if (ownerId !== userId) {
-      next(new ErrorHandler(STATUS_CODES.FORBIDDEN, ERROR_MESSAGES.FORBIDDEN));
+      next(new ForbiddenError(ERROR_MESSAGES.FORBIDDEN));
       return;
     }
     await Movie.findByIdAndRemove(movieId);
@@ -61,7 +65,7 @@ const deleteMovie = async (req, res, next) => {
     return;
   } catch (err) {
     if (err.name === 'CastError') {
-      next(new ErrorHandler(STATUS_CODES.BAD_REQUEST, ERROR_MESSAGES.BAD_REQUEST_MOVIE_DELETE));
+      next(new BadRequestError(ERROR_MESSAGES.BAD_REQUEST_MOVIE_DELETE));
       return;
     }
     next(err);

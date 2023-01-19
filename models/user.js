@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
 
-const { ErrorHandler } = require('../errors/handleError');
-const { STATUS_CODES, ERROR_MESSAGES } = require('../utils/constants');
+const { UnauthorizedError } = require('../errors/UnauthorizedError');
+const { ERROR_MESSAGES } = require('../utils/constants');
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -36,7 +36,7 @@ userSchema.statics.findUserByCredentials = function (email, password) {
       // не нашёлся — отклоняем промис
       if (!user) {
         return Promise.reject(
-          new ErrorHandler(STATUS_CODES.UNAUTHORIZED, ERROR_MESSAGES.INCORRECT_DATA),
+          new UnauthorizedError(ERROR_MESSAGES.INCORRECT_DATA),
         );
       }
 
@@ -46,7 +46,7 @@ userSchema.statics.findUserByCredentials = function (email, password) {
           if (!matched) {
             // не совпали - отклоняем промис
             return Promise.reject(
-              new ErrorHandler(STATUS_CODES.UNAUTHORIZED, ERROR_MESSAGES.INCORRECT_DATA),
+              new UnauthorizedError(ERROR_MESSAGES.INCORRECT_DATA),
             );
           }
           // совпали - возвращаем пользователя

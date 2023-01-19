@@ -2,7 +2,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
-const { ErrorHandler } = require('../errors/handleError');
+const { BadRequestError } = require('../errors/BadRequestError');
+const { NotFoundError } = require('../errors/NotFoundError');
+const { ConflictError } = require('../errors/ConflictError');
 
 const {
   NODE_ENV, JWT_SECRET, STATUS_CODES, ERROR_MESSAGES,
@@ -34,11 +36,11 @@ const createUser = async (req, res, next) => {
     // next();
   } catch (err) {
     if (err.code === 11000) {
-      next(new ErrorHandler(STATUS_CODES.CONFLICT, ERROR_MESSAGES.CONFLICT_USER));
+      next(new ConflictError(ERROR_MESSAGES.CONFLICT_USER));
       return;
     }
     if (err.name === 'ValidationError') {
-      next(new ErrorHandler(STATUS_CODES.BAD_REQUEST, ERROR_MESSAGES.BAD_REQUEST_USER));
+      next(new BadRequestError(ERROR_MESSAGES.BAD_REQUEST_USER));
       return;
     }
     next(err);
@@ -82,7 +84,7 @@ const getCurrentUser = async (req, res, next) => {
   try {
     const user = await User.findById(_id);
     if (!user) {
-      next(new ErrorHandler(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND_USER));
+      next(new NotFoundError(ERROR_MESSAGES.NOT_FOUND_USER));
       return;
     }
     res.status(STATUS_CODES.OK).send(user);
@@ -108,7 +110,7 @@ const updateUser = async (req, res, next) => {
       },
     );
     if (!user) {
-      next(new ErrorHandler(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND_USER));
+      next(new NotFoundError(ERROR_MESSAGES.NOT_FOUND_USER));
       return;
     }
     res.status(STATUS_CODES.OK).send(user);
@@ -116,11 +118,11 @@ const updateUser = async (req, res, next) => {
     return;
   } catch (err) {
     if (err.name === 'CastError' || err.name === 'ValidationError') {
-      next(new ErrorHandler(STATUS_CODES.BAD_REQUEST, ERROR_MESSAGES.BAD_REQUEST_USER));
+      next(new BadRequestError(ERROR_MESSAGES.BAD_REQUEST_USER));
       return;
     }
     if (err.code === 11000) {
-      next(new ErrorHandler(STATUS_CODES.CONFLICT, ERROR_MESSAGES.CONFLICT_USER));
+      next(new ConflictError(ERROR_MESSAGES.CONFLICT_USER));
       return;
     }
     next(err);

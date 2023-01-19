@@ -2,8 +2,8 @@ const router = require('express').Router();
 const { signInValidation, signUpValidation } = require('../middlewares/validations');
 const { login, createUser } = require('../controllers/users');
 const auth = require('../middlewares/auth');
-const { ErrorHandler } = require('../errors/handleError');
-const { STATUS_CODES, ERROR_MESSAGES } = require('../utils/constants');
+const { NotFoundError } = require('../errors/NotFoundError');
+const { ERROR_MESSAGES } = require('../utils/constants');
 
 const usersRouter = require('./users');
 const moviesRouter = require('./movies');
@@ -26,7 +26,7 @@ router.use('/movies', moviesRouter);
 
 // запрос к ошибочному роуту
 router.use((req, res, next) => {
-  next(new ErrorHandler(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.NOT_FOUND_PAGE));
+  next(new NotFoundError(ERROR_MESSAGES.NOT_FOUND_PAGE));
 });
 
 module.exports = router;
