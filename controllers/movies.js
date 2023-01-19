@@ -36,10 +36,6 @@ const createMovie = async (req, res, next) => {
       next(new BadRequestError(ERROR_MESSAGES.BAD_REQUEST_MOVIE_CREATE));
       return;
     }
-    if (err.name === 11000) {
-      next(new ConflictError(ERROR_MESSAGES.CONFLICT_MOVIE));
-      return;
-    }
     next(err);
   }
 };
